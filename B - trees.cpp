@@ -150,17 +150,93 @@ TreeNode *deleteKey(int data, TreeNode *root)
     {
         //if the current node was a leaf, then the key is not present in the tree
         if (root->leaf)
+        {
             return root;
+        }
+        //as the key is not in the current node, we perform some operations to get the
+        //correct child node where the key must be present. Then, based on the fact that if this
+        //child node has atleast T keys or not, we perform some actions.
+        int i = 0;
+        while (i < root->n && root->keys[i] < data)
+        {
+            i++;
+        }
+
+        //now i has the index of the correct child node where further number of keys checks needs to be done
+        if (root->chld[i]->n < T)
+        {
+            //if both siblings of the ith child have t - 1 keys,
+            //we merge the ith child with one of its siblings by
+            //moving a key from root in the new merged node to become its median key
+            if ((i == 0 && root->chld[i + 1]->n < T) || (i == root->n && root->chld[i - 1]->n < T) || (root->chld[i + 1]->n < T && root->chld[i - 1]->n < T))
+            {
+                if (i == 0)
+                {
+                    //merge ith and (i+1)th child
+                    TreeNode *prec, *suc;
+                    prec = root->chld[i];
+                    suc = root->chld[i + 1];
+                    prec->keys[prec->n] = root->keys[i];
+                    prec->n++;
+
+                    for (int j = i; j < root->n - 1; j++)
+                    {
+                        root->keys[j] = root->keys[j + 1];
+                        root->chld[j + 1] = root->chld[j + 2];
+                    }
+                    root->n--;
+
+                    int tmp = prec->n;
+                    for (int i = tmp; i < tmp + suc->n; i++)
+                    {
+                        prec->chld[i] = suc->chld[i - tmp];
+                        prec->n++;
+                    }
+                    delete suc;
+                    //now we recurse on the appropriate child node to finish the deletion
+                    root->chld[i] = deleteKey(data, prec);
+                }
+                else /*if i is at last child or any intermediate child*/
+                {
+                    //merge ith and (i - 1)th child
+                    TreeNode *prec, *suc;
+                    i--;
+                    prec = root->chld[i];
+                    suc = root->chld[i + 1];
+                    prec->keys[prec->n] = root->keys[i];
+                    prec->n++;
+
+                    for (int j = i; j < root->n - 1; j++)
+                    {
+                        root->keys[j] = root->keys[j + 1];
+                        root->chld[j + 1] = root->chld[j + 2];
+                    }
+                    root->n--;
+
+                    int tmp = prec->n;
+                    for (int i = tmp; i < tmp + suc->n; i++)
+                    {
+                        prec->chld[i] = suc->chld[i - tmp];
+                        prec->n++;
+                    }
+                    delete suc;
+                    //now we recurse on the appropriate child node to finish the deletion
+                    root->chld[i] = deleteKey(data, prec);
+                }
+            }
+        }
     }
 
     //if the key was found and the current node was a leaf, simply delete the key,
     //maintaining the sorted order of the keys array
-    if (root->leaf)
+    else if (root->leaf)
     {
         for (int i = ki; i < root->n - 1; i++)
         {
             root->keys[i] = root->keys[i + 1];
         }
+        root->n--;
+        return root;
     }
 
     //if the key is found, but the current node is an internal node
@@ -173,7 +249,7 @@ TreeNode *deleteKey(int data, TreeNode *root)
         if (root->chld[ki]->n >= T)
         {
             root->keys[ki] = root->chld[ki]->keys[root->chld[ki]->n - 1];
-            deleteKey(root->chld[ki]->keys[root->chld[ki]->n - 1], root->chld[ki]);
+            root->chld[ki] = deleteKey(root->chld[ki]->keys[root->chld[ki]->n - 1], root->chld[ki]);
         }
 
         //If the preceding node has lesser keys, but the succeding node has
@@ -182,17 +258,41 @@ TreeNode *deleteKey(int data, TreeNode *root)
         else if (root->chld[ki + 1]->n >= T)
         {
             root->keys[ki] = root->chld[ki + 1]->keys[0];
-            deleteKey(root->chld[ki + 1]->keys[0], root->chld[ki + 1]);
+            root->chld[ki + 1] = deleteKey(root->chld[ki + 1]->keys[0], root->chld[ki + 1]);
         }
 
         //if both the preceding and succeding nodes have less than T, i.e., T - 1
         //keys, we append the current key (i.e., "data") in the preceding node
         //and the succeding node in the preceding node as well.
         //Now the preceding node has 2 * T - 1 keys.
-        //We appropriately change the current root's keys and chld arrays and 
+        //We appropriately change the current root's keys and chld arrays and
         //free the memory for the succeding node.
-        //Then we call the delete function recursively for the same key in the preceding node (now the only child remaining among the preceding and succeding node) 
+        //Then we call the delete function recursively for the same key in the preceding node (now the only child remaining among the preceding and succeding nodes)
         else
+        {
+            TreeNode *prec, *suc;
+            prec = root->chld[ki];
+            suc = root->chld[ki + 1];
+            prec->keys[prec->n] = root->keys[ki];
+            prec->n++;
+
+            for (int i = ki; i < root->n - 1; i++)
+            {
+                root->keys[i] = root->keys[i + 1];
+                root->chld[i + 1] = root->chld[i + 2];
+            }
+            root->n--;
+
+            int tmp = prec->n;
+            for (int i = tmp; i < tmp + suc->n; i++)
+            {
+                prec->chld[i] = suc->chld[i - tmp];
+                prec->n++;
+            }
+            delete suc;
+            root->chld[ki] = deleteKey(data, prec);
+        }
+        return root;
     }
 }
 
@@ -231,5 +331,6 @@ int main()
     }
     //cout << root->leaf << endl;
     print(root);
+    // cout<<"done"<<endl;
     return 0;
 }
