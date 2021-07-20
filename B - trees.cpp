@@ -170,6 +170,7 @@ TreeNode *deleteKey(int data, TreeNode *root)
             //moving a key from root in the new merged node to become its median key
             if ((i == 0 && root->chld[i + 1]->n < T) || (i == root->n && root->chld[i - 1]->n < T) || (root->chld[i + 1]->n < T && root->chld[i - 1]->n < T))
             {
+                //FIXME: if the root has only 1 key, and that key is transferred to a child, the root node must be deleted and appropriately returned
                 if (i == 0)
                 {
                     //merge ith and (i+1)th child
@@ -223,6 +224,12 @@ TreeNode *deleteKey(int data, TreeNode *root)
                     //now we recurse on the appropriate child node to finish the deletion
                     root->chld[i] = deleteKey(data, prec);
                 }
+                return root;
+            }
+            else
+            {
+                //TODO: insert case 3a. here
+                //FIXME: Add a return statement
             }
         }
     }
