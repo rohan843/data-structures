@@ -151,7 +151,6 @@ TreeNode *deleteKey(int data, TreeNode *root)
         //if the current node was a leaf, then the key is not present in the tree
         if (root->leaf)
             return root;
-
     }
 
     //if the key was found and the current node was a leaf, simply delete the key,
@@ -168,11 +167,32 @@ TreeNode *deleteKey(int data, TreeNode *root)
     else
     {
         //if the child y that precedes the key in the current node has atleast T keys,
-        //
-        if(root->chld[ki]->n >= t)
+        //we replace the current key (at index ki) with its immediate predecessor
+        //in the child y (i.e., its keys array's last element). Then we call the delete
+        //function on node y for the predecessor key.
+        if (root->chld[ki]->n >= T)
         {
-            
+            root->keys[ki] = root->chld[ki]->keys[root->chld[ki]->n - 1];
+            deleteKey(root->chld[ki]->keys[root->chld[ki]->n - 1], root->chld[ki]);
         }
+
+        //If the preceding node has lesser keys, but the succeding node has
+        //atleast T - 1 keys, we follow the same procedure and bring the smallest key of the
+        //succeding node. Then recursively delete it from the succeding node.
+        else if (root->chld[ki + 1]->n >= T)
+        {
+            root->keys[ki] = root->chld[ki + 1]->keys[0];
+            deleteKey(root->chld[ki + 1]->keys[0], root->chld[ki + 1]);
+        }
+
+        //if both the preceding and succeding nodes have less than T, i.e., T - 1
+        //keys, we append the current key (i.e., "data") in the preceding node
+        //and the succeding node in the preceding node as well.
+        //Now the preceding node has 2 * T - 1 keys.
+        //We appropriately change the current root's keys and chld arrays and 
+        //free the memory for the succeding node.
+        //Then we call the delete function recursively for the same key in the preceding node (now the only child remaining among the preceding and succeding node) 
+        else
     }
 }
 
